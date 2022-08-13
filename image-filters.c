@@ -16,7 +16,9 @@ typedef struct PPM_Image_Buffer {
 } PPM_Image_Buffer;
 
 int read_ppm_color_bitmap(char* filename, PPM_Image_Buffer* buf);
+int read_ppm_color_bitmap_binary(char* filename, PPM_Image_Buffer* buf);
 int write_ppm_color_bitmap(char *filename, PPM_Image_Buffer *buf);
+int write_ppm_color_bitmap_binary(char *filename, PPM_Image_Buffer *buf);
 void filter_color_component(PPM_Image_Buffer* buf, unsigned int rgb_mask);
 void convert_to_grayscale(PPM_Image_Buffer* buf);
 int check_bit(unsigned int mask, int bit);
@@ -29,7 +31,7 @@ int main(int argc, char **argv) {
     }
     int opt;
 
-    if ((opt = getopt(argc, argv, "f:g")) != -1){
+    if ((opt = getopt(argc, argv, "f:gbt")) != -1){
         switch (opt)
         {
             case 'g':
@@ -46,6 +48,7 @@ int main(int argc, char **argv) {
                     filter_color_component(buf, 2);
                 }
                 else if (!strcmp(optarg, "r")){
+                    printf("here\n");
                     filter_color_component(buf, 1);
                 }
                 else if (!strcmp(optarg, "b")){
@@ -55,6 +58,18 @@ int main(int argc, char **argv) {
                     filter_color_component(buf, 3);
                 }
                 break;
+            case 'b':
+                if(write_ppm_color_bitmap_binary(argv[2], buf)){
+                    perror("write binary");
+                    return EXIT_FAILURE;
+                }
+                break;
+            case 't':
+                if(write_ppm_color_bitmap(argv[2], buf)){
+                    perror("write binary");
+                    return EXIT_FAILURE;
+                }
+                break;
         }
     }
 
@@ -62,7 +77,7 @@ int main(int argc, char **argv) {
     //read_ppm_color_bitmap("bird.ppm", buf);
     //filter_color_component(buf, 5);
     //convert_to_grayscale(buf);
-    if(write_ppm_color_bitmap(argv[2], buf)){
+    if(write_ppm_color_bitmap_binary(argv[2], buf)){
         perror("write image");
         return EXIT_FAILURE;
     }
@@ -91,7 +106,7 @@ int read_ppm_color_bitmap(char* filename, PPM_Image_Buffer* buf){
     buf->rown = row;
     buf->data = malloc(row * col * sizeof(Pixel_Data));
     
-    int arr[row * col * 3]; 
+    //int arr[row * col * 3]; 
     int curr_num;
     int arrC = 0; 
     for (;fscanf(f, "%hhu %hhu %hhu", &(buf->data[arrC].red), &(buf->data[arrC].green), &(buf->data[arrC].blue)) != EOF; arrC++) {
@@ -128,7 +143,7 @@ int write_ppm_color_bitmap(char *filename, PPM_Image_Buffer *buf) {
 }
 
 int check_bit(unsigned int mask, int bit){
-    return !!(mask & (1 << bit));
+    return !!(mask & (1ULL << bit));
 }
 
 void filter_color_component(PPM_Image_Buffer* buf, unsigned int rgb_mask){
@@ -136,6 +151,10 @@ void filter_color_component(PPM_Image_Buffer* buf, unsigned int rgb_mask){
     int first_bit = check_bit(rgb_mask, 0);
     int second_bit = check_bit(rgb_mask, 1);
     int third_bit = check_bit(rgb_mask, 2);
+    printf("%d\n", first_bit);
+    printf("%d\n", second_bit);
+    printf("%d\n", third_bit);
+
     
     for (int i = 0; i < buf->rown * buf->coln; i++){
         buf->data[i].red *= first_bit;
@@ -152,3 +171,21 @@ void convert_to_grayscale(PPM_Image_Buffer* buf) {
         buf->data[i].blue = gray;
     }
 }
+
+int write_ppm_color_bitmap_binary(char *filename, PPM_Image_Buffer *buf) {
+    FILE *f = fopen(filename, "wb");
+
+    if(!f){
+        perror("fopen");
+        return -1;
+    }
+
+    char header[200];
+    sprintf(header, "P6\n%d %d\n255\n", buf->rown, buf->coln);
+    fwrite(header, 1, strlen(header), f);
+
+    fwrite(buf->data, sizeof(Pixel_Data), buf->rown * buf->coln, f);
+
+    return 0;
+}
+
