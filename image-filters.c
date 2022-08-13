@@ -73,7 +73,8 @@ int write_ppm_color_bitmap(char *filename, PPM_Image_Buffer *buf) {
     }
     fprintf(f, "P3\n");
     fprintf(f, "%d %d\n", buf->rown, buf->coln);
-
+    fprintf(f, "255\n");
+    
     for (int i = 0; i < buf->rown * buf->coln; i++){
         fprintf(f, "%hhu %hhu %hhu", buf->data[i].red, buf->data[i].green, buf->data[i].blue);
         if (i != buf->coln * buf->rown - 1){
