@@ -23,7 +23,7 @@ int main() {
     PPM_Image_Buffer* buf = malloc(sizeof(PPM_Image_Buffer));
 
     read_ppm_color_bitmap("bird.ppm", buf);
-    filter_color_component(buf, 1);
+    filter_color_component(buf, 2);
     write_ppm_color_bitmap("bird2.ppm", buf);
     free(buf->data);
     free(buf);
@@ -43,8 +43,9 @@ int read_ppm_color_bitmap(char* filename, PPM_Image_Buffer* buf){
         fprintf(stderr, "Invalid format\n");
         return -1;
     }
-    int row, col;
+    int row, col, max_val;
     fscanf(f, "%d %d", &row, &col);
+    fscanf(f, "%d", &max_val);
     buf->coln = col;
     buf->rown = row;
     buf->data = malloc(row * col * sizeof(Pixel_Data));
@@ -54,7 +55,7 @@ int read_ppm_color_bitmap(char* filename, PPM_Image_Buffer* buf){
     int arrC = 0; 
     for (;fscanf(f, "%hhu %hhu %hhu", &(buf->data[arrC].red), &(buf->data[arrC].green), &(buf->data[arrC].blue)) != EOF; arrC++) {
         
-        if (buf->data[arrC].red > 255  || buf->data[arrC].green > 255 || buf->data[arrC].blue > 255){
+        if (buf->data[arrC].red > max_val  || buf->data[arrC].green > max_val || buf->data[arrC].blue > max_val){
             fprintf(stderr, "Invalid format\n");
             return -1;
         }
