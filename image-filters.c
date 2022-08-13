@@ -16,11 +16,14 @@ typedef struct PPM_Image_Buffer {
 
 int read_ppm_color_bitmap(char* filename, PPM_Image_Buffer* buf);
 int write_ppm_color_bitmap(char *filename, PPM_Image_Buffer *buf);
+void filter_color_component(PPM_Image_Buffer* buf, unsigned int rgb_mask);
+int check_bit(unsigned int mask, int bit);
 
 int main() {
     PPM_Image_Buffer* buf = malloc(sizeof(PPM_Image_Buffer));
 
     read_ppm_color_bitmap("bird.ppm", buf);
+    filter_color_component(buf, 1);
     write_ppm_color_bitmap("bird2.ppm", buf);
     free(buf->data);
     free(buf);
@@ -79,4 +82,21 @@ int write_ppm_color_bitmap(char *filename, PPM_Image_Buffer *buf) {
 
     fclose(f);
     return 0;
+}
+
+int check_bit(unsigned int mask, int bit){
+    return !!(mask & (1 << bit));
+}
+
+void filter_color_component(PPM_Image_Buffer* buf, unsigned int rgb_mask){
+
+    int first_bit = check_bit(rgb_mask, 0);
+    int second_bit = check_bit(rgb_mask, 1);
+    int third_bit = check_bit(rgb_mask, 2);
+    
+    for (int i = 0; i < buf->rown * buf->coln; i++){
+        buf->data[i].red *= first_bit;
+        buf->data[i].green *= second_bit;
+        buf->data[i].blue *= third_bit;
+    }
 }
