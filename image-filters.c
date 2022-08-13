@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <getopt.h>
 
 typedef struct Pixel_Data {
     uint8_t red;
@@ -20,13 +21,51 @@ void filter_color_component(PPM_Image_Buffer* buf, unsigned int rgb_mask);
 void convert_to_grayscale(PPM_Image_Buffer* buf);
 int check_bit(unsigned int mask, int bit);
 
-int main() {
+int main(int argc, char **argv) {
     PPM_Image_Buffer* buf = malloc(sizeof(PPM_Image_Buffer));
+    if (read_ppm_color_bitmap(argv[1], buf)) {
+        perror("read image");
+        return EXIT_FAILURE;
+    }
+    int opt;
 
-    read_ppm_color_bitmap("bird.ppm", buf);
+    if ((opt = getopt(argc, argv, "f:g")) != -1){
+        switch (opt)
+        {
+            case 'g':
+                convert_to_grayscale(buf);
+                break;
+            case 'f':
+                if (!strcmp(optarg, "rb")){
+                    filter_color_component(buf, 5);
+                }
+                else if (!strcmp(optarg, "gb")){
+                    filter_color_component(buf, 6);
+                }
+                else if (!strcmp(optarg, "g")){
+                    filter_color_component(buf, 2);
+                }
+                else if (!strcmp(optarg, "r")){
+                    filter_color_component(buf, 1);
+                }
+                else if (!strcmp(optarg, "b")){
+                    filter_color_component(buf, 4);
+                }
+                else if (!strcmp(optarg, "rg")){
+                    filter_color_component(buf, 3);
+                }
+                break;
+        }
+    }
+
+
+    //read_ppm_color_bitmap("bird.ppm", buf);
     //filter_color_component(buf, 5);
-    convert_to_grayscale(buf);
-    write_ppm_color_bitmap("bird2.ppm", buf);
+    //convert_to_grayscale(buf);
+    if(write_ppm_color_bitmap(argv[2], buf)){
+        perror("write image");
+        return EXIT_FAILURE;
+    }
     free(buf->data);
     free(buf);
     return 0;
