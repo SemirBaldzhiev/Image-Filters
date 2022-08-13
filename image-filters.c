@@ -17,13 +17,15 @@ typedef struct PPM_Image_Buffer {
 int read_ppm_color_bitmap(char* filename, PPM_Image_Buffer* buf);
 int write_ppm_color_bitmap(char *filename, PPM_Image_Buffer *buf);
 void filter_color_component(PPM_Image_Buffer* buf, unsigned int rgb_mask);
+void convert_to_grayscale(PPM_Image_Buffer* buf);
 int check_bit(unsigned int mask, int bit);
 
 int main() {
     PPM_Image_Buffer* buf = malloc(sizeof(PPM_Image_Buffer));
 
     read_ppm_color_bitmap("bird.ppm", buf);
-    filter_color_component(buf, 2);
+    //filter_color_component(buf, 5);
+    convert_to_grayscale(buf);
     write_ppm_color_bitmap("bird2.ppm", buf);
     free(buf->data);
     free(buf);
@@ -74,7 +76,7 @@ int write_ppm_color_bitmap(char *filename, PPM_Image_Buffer *buf) {
     fprintf(f, "P3\n");
     fprintf(f, "%d %d\n", buf->rown, buf->coln);
     fprintf(f, "255\n");
-    
+
     for (int i = 0; i < buf->rown * buf->coln; i++){
         fprintf(f, "%hhu %hhu %hhu", buf->data[i].red, buf->data[i].green, buf->data[i].blue);
         if (i != buf->coln * buf->rown - 1){
@@ -100,5 +102,14 @@ void filter_color_component(PPM_Image_Buffer* buf, unsigned int rgb_mask){
         buf->data[i].red *= first_bit;
         buf->data[i].green *= second_bit;
         buf->data[i].blue *= third_bit;
+    }
+}
+
+void convert_to_grayscale(PPM_Image_Buffer* buf) {
+    for (int i = 0; i < buf->rown * buf->coln; i++){
+        int gray = buf->data[i].red * 0.3 + buf->data[i].green * 0.59 + buf->data[i].blue * 0.11;
+        buf->data[i].red = gray;
+        buf->data[i].green = gray;
+        buf->data[i].blue = gray;
     }
 }
